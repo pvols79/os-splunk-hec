@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+    <mount>//OPNsense/SplunkHEC</mount>
+    <version>1.0.0</version>
+    <description>Splunk HEC Log Exporter settings</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <token type="TextField">
+                <Required>N</Required>
+                <Mask>/^[a-fA-F0-9\-]*$/</Mask>
+                <ValidationMessage>Please enter a valid HEC token (UUID format).</ValidationMessage>
+            </token>
+            <endpoint type="UrlField">
+                <Required>N</Required>
+                <ValidationMessage>Please enter a valid URL (e.g. https://splunk.example.com:8088/services/collector).</ValidationMessage>
+            </endpoint>
+            <logs type="CSVListField">
+                <Default>/var/log/system.log,/var/log/filter.log</Default>
+                <Required>Y</Required>
+            </logs>
+            <cache_size type="IntegerField">
+                <Default>100</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>10000</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Cache size must be between 1 and 10000 MB.</ValidationMessage>
+            </cache_size>
+            <cache_time type="IntegerField">
+                <Default>24</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>720</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Cache retention must be between 1 and 720 hours.</ValidationMessage>
+            </cache_time>
+        </general>
+    </items>
+</model>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+  <name>splunk_hec</name>
+  <description>Splunk HEC log exporter daemon</description>
+  <type>daemon</type>
+  <command>/usr/local/opnsense/scripts/OPNsense/SplunkHEC/Exporter.php</command>
+  <enable>true</enable>
+  <runas>root</runas>
+  <logfile>/var/log/splunk_hec.log</logfile>
+</service>
