@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu>
-    <System order="90">
-        <Settings>
-            <SplunkHEC VisibleName="Splunk HEC" url="/ui/splunkhec" />
-        </Settings>
-    </System>
+    <Services>
+        <SplunkHEC VisibleName="Splunk HEC" url="/ui/splunkhec/general" order="850"/>
+    </Services>
 </menu>
