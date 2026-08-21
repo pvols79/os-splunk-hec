@@ -101,11 +101,33 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
     $lines  = file(CACHE_PATH, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $failed = [];
     $ok     = 0;
+    
+    $batch = '';
+    $batchCount = 0;
 
     foreach ($lines as $line) {
-        $code = hec_post($endpoint, $token, $line, $verifySsl, $useGzip);
-        if ($code === 200) $ok++;
-        else $failed[] = $line;
+        $batch .= $line . "\n";
+        $batchCount++;
+        
+        if ($batchCount >= 500) {
+            $code = hec_post($endpoint, $token, $batch, $verifySsl, $useGzip);
+            if ($code === 200) {
+                $ok += $batchCount;
+            } else {
+                $failed[] = trim($batch);
+            }
+            $batch = '';
+            $batchCount = 0;
+        }
+    }
+    
+    if ($batchCount > 0) {
+        $code = hec_post($endpoint, $token, $batch, $verifySsl, $useGzip);
+        if ($code === 200) {
+            $ok += $batchCount;
+        } else {
+            $failed[] = trim($batch);
+        }
     }
 
     if (count($failed) > 0) {
@@ -124,7 +146,7 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
 
 function gather_telemetry(): string
 {
-    $load = sys_getloadavg();
+    $load = sys_getloadavg() ?: [0, 0, 0];
     
     $diskTotal = disk_total_space('/') ?: 0;
     $diskFree  = disk_free_space('/') ?: 0;
