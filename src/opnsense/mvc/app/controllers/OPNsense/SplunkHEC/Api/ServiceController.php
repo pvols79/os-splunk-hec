@@ -67,6 +67,16 @@ class ServiceController extends ApiMutableModelControllerBase
                 $mdl->serializeToConfig();
                 Config::getInstance()->save();
                 $this->writeIniConfig($mdl);
+
+                // Restart daemon as part of save — avoids a separate
+                // reconfigure API call from the frontend (which has auth issues).
+                try {
+                    $backend = new Backend();
+                    $backend->configdRun('splunk_hec restart');
+                } catch (\Exception $e) {
+                    syslog(LOG_WARNING, 'SplunkHEC: restart failed: ' . $e->getMessage());
+                }
+
                 $result['result'] = 'saved';
             }
         }

@@ -7,7 +7,7 @@
 <script>
     $(document).ready(function () {
 
-        {# ── Populate form from API on page load ── #}
+        {# Populate form from API on page load #}
         mapDataToFormUI({
             'frm_GeneralSettings': '/api/splunkhec/service/get'
         }).done(function () {
@@ -16,39 +16,23 @@
         });
 
         {#
-         # Apply button — explicit two-step flow:
-         #   1. saveFormToEndpoint() → POST form to /set (saves config + writes INI)
-         #   2. ajaxCall() → POST to /reconfigure (restarts daemon)
-         # We manage the spinner manually so we are not dependent on
-         # SimpleActionButton's undocumented response-format expectations.
+         # Apply button — single-step: saveFormToEndpoint POSTs to /set,
+         # which saves config AND restarts the daemon server-side.
+         # We stop the spinner in both .done() and .fail() so it always
+         # resolves regardless of server response.
          #}
         $('#saveAct').on('click', function () {
             var btn  = $(this);
             var icon = $('#saveAct_progress');
 
-            {# Disable button and show spinner #}
             btn.prop('disabled', true);
             icon.addClass('fa fa-spinner fa-spin');
 
-            {# Step 1 – save config #}
             saveFormToEndpoint(
                 '/api/splunkhec/service/set',
                 'frm_GeneralSettings',
-                function () {}   {# callback_ok (unused — we chain below) #}
-            ).done(function (data) {
-                if (data && data.result === 'saved') {
-                    {# Step 2 – reconfigure (restart daemon) #}
-                    ajaxCall('/api/splunkhec/service/reconfigure', {}, function () {
-                        btn.prop('disabled', false);
-                        icon.removeClass('fa fa-spinner fa-spin');
-                    });
-                } else {
-                    {# Validation errors or save failure — stop spinner #}
-                    btn.prop('disabled', false);
-                    icon.removeClass('fa fa-spinner fa-spin');
-                }
-            }).fail(function () {
-                {# Network/HTTP error — stop spinner #}
+                function () {}
+            ).always(function () {
                 btn.prop('disabled', false);
                 icon.removeClass('fa fa-spinner fa-spin');
             });
@@ -63,7 +47,7 @@
             <div class="col-md-12">
                 <form id="frm_GeneralSettings">
 
-                    {# ── General Settings ── #}
+                    {# General Settings #}
                     <table class="table table-striped table-condensed">
                         <thead>
                             <tr>
@@ -137,7 +121,7 @@
                         </tbody>
                     </table>
 
-                    {# ── Log Sources ── #}
+                    {# Log Sources #}
                     <table class="table table-striped table-condensed" style="margin-top:1.5em;">
                         <thead>
                             <tr>
@@ -173,11 +157,6 @@
     </div>
 </div>
 
-{#
- # Apply button — explicit HTML so the label is always visible without
- # relying on SimpleActionButton to set it from data-label.
- # Spinner is the <i> element; managed by the click handler above.
- #}
 <section class="grid-bottom-reserve __mt">
     <div class="alert content-box" style="display: flex; align-items: center; margin-bottom: 0;">
         <button class="btn btn-primary __mr" id="saveAct" type="button">
