@@ -1,14 +1,19 @@
 #!/usr/local/bin/php
 <?php
 
+/*
+ * Copyright (C) 2026 pvols79
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
 /**
  * OPNsense Splunk HEC Plugin – Exporter Daemon
  *
  * Reads configured log files, detects new lines (surviving log rotation via
  * inode tracking), and forwards each line as a JSON event to a Splunk HTTP
  * Event Collector endpoint.
- *
- * @license BSD-2-Clause
  */
 
 declare(strict_types=1);

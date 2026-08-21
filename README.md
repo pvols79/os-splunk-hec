@@ -7,10 +7,22 @@ Plugin for sending OPNsense logs to Splunk via HTTP Event Collector (HEC).
 - Native OPNsense plugin
 - Configurable from WebGUI
 - Multiple log sources
-- HEC RAW support
-- Compression support
+- **Dropped**: HEC RAW support (Focusing exclusively on structured HEC Event/JSON payloads for better parsing)
+- Compression support (GZIP)
 - Local retry and caching
 - Single service architecture
+- System Hardware & Firewall Telemetry (CPU, Memory, Disk, PF states)
+- Zenarmor Elasticsearch IPDR parsing
+
+---
+
+## Screenshots
+
+![Splunk HEC Export Settings](screenshots/gui_settings.png)
+
+![Splunk HEC Log Source Selection](screenshots/gui_logs.png)
+
+![Splunk Dashboard Sourcetypes](screenshots/splunk_dashboard.png)
 
 ---
 
@@ -154,9 +166,9 @@ Run on a test OPNsense VM (version 26.7):
 
 ## Roadmap
 
-- **Phase I** *(current)*: Core daemon, base log forwarding (system.log, filter.log), WebGUI settings.
-- **Phase II**: Add-on log source toggles (e.g. dhcpd.log, suricata, ntpd).
-- **Phase III**: Zenarmor deep-packet-inspection log parser integration.
+- **Phase I** *(Completed)*: Core daemon, base log forwarding, WebGUI settings.
+- **Phase II** *(Completed)*: Add-on log source toggles (e.g. dhcpd, suricata, ntpd), dynamic GUI disk-checking, and round-robin stream multiplexing.
+- **Phase III** *(Completed)*: Zenarmor deep-packet-inspection IPDR parser integration and System Telemetry generation.
 
 ---
 
