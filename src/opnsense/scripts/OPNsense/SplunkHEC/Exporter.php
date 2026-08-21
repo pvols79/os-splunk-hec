@@ -126,22 +126,22 @@ function gather_telemetry(): string
 {
     $load = sys_getloadavg();
     
-    $diskTotal = disk_total_space('/');
-    $diskFree  = disk_free_space('/');
+    $diskTotal = disk_total_space('/') ?: 0;
+    $diskFree  = disk_free_space('/') ?: 0;
     $diskUsedPct = $diskTotal > 0 ? round((($diskTotal - $diskFree) / $diskTotal) * 100, 2) : 0;
     
-    $pagesize     = (int)shell_exec('/sbin/sysctl -n hw.pagesize');
-    $memFreePages = (int)shell_exec('/sbin/sysctl -n vm.stats.vm.v_free_count');
-    $memTotal     = (int)shell_exec('/sbin/sysctl -n hw.physmem');
+    $pagesize     = (int)(shell_exec('/sbin/sysctl -n hw.pagesize') ?? 0);
+    $memFreePages = (int)(shell_exec('/sbin/sysctl -n vm.stats.vm.v_free_count') ?? 0);
+    $memTotal     = (int)(shell_exec('/sbin/sysctl -n hw.physmem') ?? 0);
     $memUsed      = max(0, $memTotal - ($memFreePages * $pagesize));
     
-    $pfStats = shell_exec('/sbin/pfctl -si 2>/dev/null');
+    $pfStats = shell_exec('/sbin/pfctl -si 2>/dev/null') ?? '';
     preg_match('/current entries\s+(\d+)/', $pfStats, $mStates);
     $pfCurrent = isset($mStates[1]) ? (int)$mStates[1] : 0;
     preg_match('/maximum entries\s+(\d+)/', $pfStats, $mMaxStates);
     $pfMax = isset($mMaxStates[1]) ? (int)$mMaxStates[1] : 0;
     
-    $boottimeStr = shell_exec('/sbin/sysctl -n kern.boottime');
+    $boottimeStr = shell_exec('/sbin/sysctl -n kern.boottime') ?? '';
     preg_match('/sec = (\d+)/', $boottimeStr, $mBoot);
     $uptime = isset($mBoot[1]) ? (time() - (int)$mBoot[1]) : 0;
     
