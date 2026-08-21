@@ -105,6 +105,17 @@
                             </tr>
                             <tr>
                                 <td>
+                                    <label for="general.enable_telemetry">{{ lang._('Enable System Telemetry') }}</label>
+                                </td>
+                                <td>
+                                    <input type="checkbox" id="general.enable_telemetry" name="general.enable_telemetry">
+                                    <small class="text-muted">
+                                        {{ lang._('Sample CPU, Memory, Disk, and Firewall state metrics every 60 seconds and ship them as a JSON event.') }}
+                                    </small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <label for="general.endpoint">{{ lang._('HEC Endpoint URL') }}</label>
                                 </td>
                                 <td>

@@ -119,6 +119,54 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
 }
 
 // ---------------------------------------------------------------------------
+// Telemetry Gathering
+// ---------------------------------------------------------------------------
+
+function gather_telemetry(): string
+{
+    $load = sys_getloadavg();
+    
+    $diskTotal = disk_total_space('/');
+    $diskFree  = disk_free_space('/');
+    $diskUsedPct = $diskTotal > 0 ? round((($diskTotal - $diskFree) / $diskTotal) * 100, 2) : 0;
+    
+    $pagesize     = (int)shell_exec('/sbin/sysctl -n hw.pagesize');
+    $memFreePages = (int)shell_exec('/sbin/sysctl -n vm.stats.vm.v_free_count');
+    $memTotal     = (int)shell_exec('/sbin/sysctl -n hw.physmem');
+    $memUsed      = max(0, $memTotal - ($memFreePages * $pagesize));
+    
+    $pfStats = shell_exec('/sbin/pfctl -si 2>/dev/null');
+    preg_match('/current entries\s+(\d+)/', $pfStats, $mStates);
+    $pfCurrent = isset($mStates[1]) ? (int)$mStates[1] : 0;
+    preg_match('/maximum entries\s+(\d+)/', $pfStats, $mMaxStates);
+    $pfMax = isset($mMaxStates[1]) ? (int)$mMaxStates[1] : 0;
+    
+    $boottimeStr = shell_exec('/sbin/sysctl -n kern.boottime');
+    preg_match('/sec = (\d+)/', $boottimeStr, $mBoot);
+    $uptime = isset($mBoot[1]) ? (time() - (int)$mBoot[1]) : 0;
+    
+    $event = [
+        'cpu_load_1m'        => $load[0] ?? 0,
+        'cpu_load_5m'        => $load[1] ?? 0,
+        'cpu_load_15m'       => $load[2] ?? 0,
+        'mem_total_bytes'    => $memTotal,
+        'mem_used_bytes'     => $memUsed,
+        'disk_root_used_pct' => $diskUsedPct,
+        'pf_states_current'  => $pfCurrent,
+        'pf_states_max'      => $pfMax,
+        'uptime_seconds'     => $uptime
+    ];
+    
+    return json_encode([
+        'time'       => time(),
+        'host'       => gethostname(),
+        'source'     => 'opnsense:system',
+        'sourcetype' => 'opnsense:telemetry:system',
+        'event'      => $event
+    ], JSON_UNESCAPED_SLASHES) . "\n";
+}
+
+// ---------------------------------------------------------------------------
 // Daemon Loop
 // ---------------------------------------------------------------------------
 
@@ -141,10 +189,11 @@ while (true) {
         exit(0);
     }
 
-    $token     = $cfg['token']    ?? '';
-    $endpoint  = $cfg['endpoint'] ?? '';
-    $verifySsl = (($cfg['verify_ssl'] ?? '1') === '1');
-    $useGzip   = (($cfg['use_gzip'] ?? '1') === '1');
+    $token           = $cfg['token']    ?? '';
+    $endpoint        = $cfg['endpoint'] ?? '';
+    $verifySsl       = (($cfg['verify_ssl'] ?? '1') === '1');
+    $useGzip         = (($cfg['use_gzip'] ?? '1') === '1');
+    $enableTelemetry = (($cfg['enable_telemetry'] ?? '0') === '1');
 
     if ($token === '' || $endpoint === '') {
         echo "DEBUG: Token or Endpoint missing. Sleeping 10s...\n";
@@ -181,6 +230,22 @@ while (true) {
 
     echo "DEBUG: Loading state...\n";
     $state = load_state();
+
+    // Telemetry sampling (every 60 seconds)
+    if ($enableTelemetry) {
+        $lastTelemetryTime = $state['telemetry_time'] ?? 0;
+        if ((time() - $lastTelemetryTime) >= 60) {
+            echo "DEBUG: Gathering system telemetry...\n";
+            $telemetryJson = gather_telemetry();
+            $code = hec_post($endpoint, $token, $telemetryJson, $verifySsl, $useGzip);
+            if ($code !== 200) {
+                cache_payload($telemetryJson);
+            } else {
+                echo "INFO  Forwarded system telemetry.\n";
+            }
+            $state['telemetry_time'] = time();
+        }
+    }
 
     foreach ($sources as $logFile => $sourcetype) {
         if (!is_readable($logFile)) {

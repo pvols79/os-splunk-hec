@@ -18,6 +18,10 @@
                 <Default>1</Default>
                 <Required>Y</Required>
             </use_gzip>
+            <enable_telemetry type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enable_telemetry>
             <verify_ssl type="BooleanField">
                 <default>1</default>
                 <Required>Y</Required>
