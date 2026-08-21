@@ -328,7 +328,7 @@ while (true) {
                         'source'     => $logFile,
                         'sourcetype' => $sourcetype,
                         'event'      => $eventData,
-                    ], JSON_UNESCAPED_SLASHES) . "\n";
+                    ], JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
 
                     $batchCount++;
 
@@ -337,8 +337,10 @@ while (true) {
                         $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl, $useGzip);
                         if ($code === 200) {
                             $lineCount += $batchCount;
+                            echo "."; // Progress indicator for massive files
                         } else {
                             cache_payload($payloadBatch);
+                            echo "x";
                         }
                         $payloadBatch = '';
                         $batchCount = 0;
@@ -350,10 +352,14 @@ while (true) {
                     $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl, $useGzip);
                     if ($code === 200) {
                         $lineCount += $batchCount;
+                        echo ".";
                     } else {
                         cache_payload($payloadBatch);
+                        echo "x";
                     }
                 }
+
+                if ($lineCount >= 500) echo "\n";
 
                 $newOffset = ftell($fh);
                 fclose($fh);
