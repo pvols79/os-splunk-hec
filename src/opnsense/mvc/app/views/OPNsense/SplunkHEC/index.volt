@@ -137,7 +137,7 @@
                                 <td>
                                     <input type="checkbox" id="logs.system" name="logs.system">
                                 </td>
-                                <td><code>/var/log/system.log</code></td>
+                                <td><code>/var/log/system/latest.log</code></td>
                                 <td><code>opnsense:syslog</code></td>
                             </tr>
                             <tr>
@@ -145,7 +145,7 @@
                                 <td>
                                     <input type="checkbox" id="logs.filter" name="logs.filter">
                                 </td>
-                                <td><code>/var/log/filter.log</code></td>
+                                <td><code>/var/log/filter/latest.log</code></td>
                                 <td><code>opnsense:filterlog</code></td>
                             </tr>
                         </tbody>
