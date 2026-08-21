@@ -72,8 +72,13 @@ class ServiceController extends ApiMutableModelControllerBase
                 $this->writeIniConfig($mdl);
 
                 // Reload the daemon so new settings take effect immediately
-                $backend = new Backend();
-                $backend->configdRun('splunk_hec restart');
+                try {
+                    $backend = new Backend();
+                    $backend->configdRun('splunk_hec restart');
+                } catch (\Exception $e) {
+                    // Log but don't fail the save — daemon may not be running yet
+                    syslog(LOG_WARNING, 'SplunkHEC: could not restart daemon: ' . $e->getMessage());
+                }
 
                 $result['result'] = 'saved';
             }
