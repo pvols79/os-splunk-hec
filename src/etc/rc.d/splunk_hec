@@ -19,6 +19,8 @@ command_args="-f -P ${pidfile} /usr/local/bin/php /usr/local/opnsense/scripts/OP
 
 load_rc_config $name
 
-: ${splunk_hec_enable:="NO"}
+# Force YES because Exporter.php has its own internal check for $cfg['enabled']
+# and exits gracefully if disabled. This bypasses the need for OPNsense rc.conf.d templates.
+splunk_hec_enable="YES"
 
 run_rc_command "$1"

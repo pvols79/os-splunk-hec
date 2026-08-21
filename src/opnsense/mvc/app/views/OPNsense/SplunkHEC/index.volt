@@ -28,14 +28,29 @@
             btn.prop('disabled', true);
             icon.addClass('fa fa-spinner fa-spin');
 
+            // Failsafe: ensure spinner stops even if JS encounters a hidden error 
+            // or the server crashes silently (HTTP 500).
+            setTimeout(function() {
+                btn.prop('disabled', false);
+                icon.removeClass('fa fa-spinner fa-spin');
+            }, 3000);
+
+            // Use explicit callbacks instead of .always() promise chain
             saveFormToEndpoint(
                 '/api/splunkhec/service/set',
                 'frm_GeneralSettings',
-                function () {}
-            ).always(function () {
-                btn.prop('disabled', false);
-                icon.removeClass('fa fa-spinner fa-spin');
-            });
+                function () {
+                    // Success callback
+                    btn.prop('disabled', false);
+                    icon.removeClass('fa fa-spinner fa-spin');
+                },
+                true,
+                function () {
+                    // Error callback
+                    btn.prop('disabled', false);
+                    icon.removeClass('fa fa-spinner fa-spin');
+                }
+            );
         });
 
     });
