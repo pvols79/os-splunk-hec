@@ -160,7 +160,9 @@ function gather_telemetry(): string
     $pfStats = shell_exec('/sbin/pfctl -si 2>/dev/null') ?? '';
     preg_match('/current entries\s+(\d+)/', $pfStats, $mStates);
     $pfCurrent = isset($mStates[1]) ? (int)$mStates[1] : 0;
-    preg_match('/maximum entries\s+(\d+)/', $pfStats, $mMaxStates);
+    
+    $pfLimits = shell_exec('/sbin/pfctl -sm 2>/dev/null') ?? '';
+    preg_match('/states\s+hard limit\s+(\d+)/', $pfLimits, $mMaxStates);
     $pfMax = isset($mMaxStates[1]) ? (int)$mMaxStates[1] : 0;
     
     $boottimeStr = shell_exec('/sbin/sysctl -n kern.boottime') ?? '';
