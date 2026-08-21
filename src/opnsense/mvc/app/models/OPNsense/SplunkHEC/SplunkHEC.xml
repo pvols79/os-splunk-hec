@@ -88,6 +88,34 @@
                 <Default>0</Default>
                 <Required>Y</Required>
             </unbound>
+            <kea type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </kea>
+            <dnsmasq type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </dnsmasq>
+            <wireguard type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </wireguard>
+            <suricata_eve type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </suricata_eve>
+            <portalauth type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </portalauth>
+            <crowdsec type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </crowdsec>
+            <elasticsearch type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </elasticsearch>
         </logs>
     </items>
 </model>

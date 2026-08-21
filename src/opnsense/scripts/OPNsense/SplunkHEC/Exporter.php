@@ -217,7 +217,14 @@ while (true) {
     if (($logsCfg['openvpn'] ?? '0') === '1')  $sources['/var/log/openvpn/latest.log']  = 'opnsense:openvpn';
     if (($logsCfg['routing'] ?? '0') === '1')  $sources['/var/log/routing/latest.log']  = 'opnsense:routing';
     if (($logsCfg['suricata'] ?? '0') === '1') $sources['/var/log/suricata/latest.log'] = 'opnsense:suricata';
+    if (($logsCfg['suricata_eve'] ?? '0') === '1') $sources['/var/log/suricata/eve.json'] = 'opnsense:suricata:eve';
     if (($logsCfg['unbound'] ?? '0') === '1')  $sources['/var/log/unbound/latest.log']  = 'opnsense:unbound';
+    if (($logsCfg['kea'] ?? '0') === '1')      $sources['/var/log/kea/latest.log']      = 'opnsense:kea';
+    if (($logsCfg['dnsmasq'] ?? '0') === '1')  $sources['/var/log/dnsmasq/latest.log']  = 'opnsense:dnsmasq';
+    if (($logsCfg['wireguard'] ?? '0') === '1') $sources['/var/log/wireguard/latest.log'] = 'opnsense:wireguard';
+    if (($logsCfg['portalauth'] ?? '0') === '1') $sources['/var/log/portalauth/latest.log'] = 'opnsense:portalauth';
+    if (($logsCfg['crowdsec'] ?? '0') === '1') $sources['/var/log/crowdsec/latest.log'] = 'opnsense:crowdsec';
+    if (($logsCfg['elasticsearch'] ?? '0') === '1') $sources['/var/log/elasticsearch/latest.log'] = 'opnsense:elasticsearch';
 
     if (empty($sources)) {
         echo "DEBUG: No log sources enabled. Sleeping 10s...\n";
@@ -284,12 +291,21 @@ while (true) {
                     $line = rtrim($line, "\r\n");
                     if ($line === '') continue;
 
+                    // Support sending structured JSON (like eve.json) directly instead of as escaped strings
+                    $eventData = $line;
+                    if (str_starts_with($line, '{') && str_ends_with($line, '}')) {
+                        $decoded = @json_decode($line, true);
+                        if ($decoded !== null) {
+                            $eventData = $decoded;
+                        }
+                    }
+
                     $payloadBatch .= json_encode([
                         'time'       => time(),
                         'host'       => gethostname(),
                         'source'     => $logFile,
                         'sourcetype' => $sourcetype,
-                        'event'      => $line,
+                        'event'      => $eventData,
                     ], JSON_UNESCAPED_SLASHES) . "\n";
 
                     $batchCount++;

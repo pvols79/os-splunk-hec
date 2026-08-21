@@ -148,8 +148,49 @@ class ServiceController extends ApiMutableModelControllerBase
         $ini .= 'routing = '  . (string)$l->routing  . "\n";
         $ini .= 'suricata = ' . (string)$l->suricata . "\n";
         $ini .= 'unbound = '  . (string)$l->unbound  . "\n";
+        $ini .= 'kea = ' . (string)$l->kea . "\n";
+        $ini .= 'dnsmasq = ' . (string)$l->dnsmasq . "\n";
+        $ini .= 'wireguard = ' . (string)$l->wireguard . "\n";
+        $ini .= 'suricata_eve = ' . (string)$l->suricata_eve . "\n";
+        $ini .= 'portalauth = ' . (string)$l->portalauth . "\n";
+        $ini .= 'crowdsec = ' . (string)$l->crowdsec . "\n";
+        $ini .= 'elasticsearch = ' . (string)$l->elasticsearch . "\n";
 
         @mkdir('/var/etc', 0755, true);
         file_put_contents('/var/etc/splunk_hec.conf', $ini);
+    }
+    
+    /**
+     * Check which log files exist on the firewall
+     * @return array
+     */
+    public function checklogsAction(): array
+    {
+        $paths = [
+            'system' => '/var/log/system/latest.log',
+            'filter' => '/var/log/filter/latest.log',
+            'audit' => '/var/log/audit/latest.log',
+            'dhcpd' => '/var/log/dhcpd/latest.log',
+            'kea' => '/var/log/kea/latest.log',
+            'dnsmasq' => '/var/log/dnsmasq/latest.log',
+            'lighttpd' => '/var/log/lighttpd/latest.log',
+            'ntpd' => '/var/log/ntpd/latest.log',
+            'openvpn' => '/var/log/openvpn/latest.log',
+            'wireguard' => '/var/log/wireguard/latest.log',
+            'routing' => '/var/log/routing/latest.log',
+            'suricata' => '/var/log/suricata/latest.log',
+            'suricata_eve' => '/var/log/suricata/eve.json',
+            'unbound' => '/var/log/unbound/latest.log',
+            'portalauth' => '/var/log/portalauth/latest.log',
+            'crowdsec' => '/var/log/crowdsec/latest.log',
+            'elasticsearch' => '/var/log/elasticsearch/latest.log'
+        ];
+        
+        $result = [];
+        foreach ($paths as $key => $path) {
+            $result[$key] = file_exists($path);
+        }
+        
+        return $result;
     }
 }

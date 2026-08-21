@@ -13,6 +13,22 @@
         }).done(function () {
             formatTokenizersUI();
             $('.selectpicker').selectpicker('refresh');
+            
+            // Poll backend to check if log files physically exist
+            $.ajax({
+                url: '/api/splunkhec/service/checklogs',
+                type: 'GET',
+                success: function(data) {
+                    for (const [key, exists] of Object.entries(data)) {
+                        var td = $('#logs\\.' + key).closest('tr').find('td:nth-child(3)');
+                        if (exists) {
+                            td.append(' <span class="label label-success" style="margin-left:10px;"><i class="fa fa-check"></i> Found</span>');
+                        } else {
+                            td.append(' <span class="label label-warning" style="margin-left:10px;"><i class="fa fa-warning"></i> Not Found</span>');
+                        }
+                    }
+                }
+            });
         });
 
         {#
@@ -205,6 +221,18 @@
                                 <td><code>opnsense:dhcpd</code></td>
                             </tr>
                             <tr>
+                                <td><strong>{{ lang._('DHCP (Kea)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.kea" name="logs.kea"></td>
+                                <td><code>/var/log/kea/latest.log</code></td>
+                                <td><code>opnsense:kea</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('DNS/DHCP (Dnsmasq)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.dnsmasq" name="logs.dnsmasq"></td>
+                                <td><code>/var/log/dnsmasq/latest.log</code></td>
+                                <td><code>opnsense:dnsmasq</code></td>
+                            </tr>
+                            <tr>
                                 <td><strong>{{ lang._('Web GUI (Lighttpd)') }}</strong></td>
                                 <td><input type="checkbox" id="logs.lighttpd" name="logs.lighttpd"></td>
                                 <td><code>/var/log/lighttpd/latest.log</code></td>
@@ -217,10 +245,16 @@
                                 <td><code>opnsense:ntpd</code></td>
                             </tr>
                             <tr>
-                                <td><strong>{{ lang._('OpenVPN') }}</strong></td>
+                                <td><strong>{{ lang._('VPN - OpenVPN') }}</strong></td>
                                 <td><input type="checkbox" id="logs.openvpn" name="logs.openvpn"></td>
                                 <td><code>/var/log/openvpn/latest.log</code></td>
                                 <td><code>opnsense:openvpn</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('VPN - WireGuard') }}</strong></td>
+                                <td><input type="checkbox" id="logs.wireguard" name="logs.wireguard"></td>
+                                <td><code>/var/log/wireguard/latest.log</code></td>
+                                <td><code>opnsense:wireguard</code></td>
                             </tr>
                             <tr>
                                 <td><strong>{{ lang._('Routing') }}</strong></td>
@@ -229,16 +263,40 @@
                                 <td><code>opnsense:routing</code></td>
                             </tr>
                             <tr>
-                                <td><strong>{{ lang._('Suricata (IDS/IPS)') }}</strong></td>
+                                <td><strong>{{ lang._('Suricata (Syslog)') }}</strong></td>
                                 <td><input type="checkbox" id="logs.suricata" name="logs.suricata"></td>
                                 <td><code>/var/log/suricata/latest.log</code></td>
                                 <td><code>opnsense:suricata</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Suricata (EVE JSON)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.suricata_eve" name="logs.suricata_eve"></td>
+                                <td><code>/var/log/suricata/eve.json</code></td>
+                                <td><code>opnsense:suricata:eve</code></td>
                             </tr>
                             <tr>
                                 <td><strong>{{ lang._('Unbound DNS') }}</strong></td>
                                 <td><input type="checkbox" id="logs.unbound" name="logs.unbound"></td>
                                 <td><code>/var/log/unbound/latest.log</code></td>
                                 <td><code>opnsense:unbound</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Captive Portal') }}</strong></td>
+                                <td><input type="checkbox" id="logs.portalauth" name="logs.portalauth"></td>
+                                <td><code>/var/log/portalauth/latest.log</code></td>
+                                <td><code>opnsense:portalauth</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('CrowdSec') }}</strong></td>
+                                <td><input type="checkbox" id="logs.crowdsec" name="logs.crowdsec"></td>
+                                <td><code>/var/log/crowdsec/latest.log</code></td>
+                                <td><code>opnsense:crowdsec</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Elasticsearch (Zenarmor)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.elasticsearch" name="logs.elasticsearch"></td>
+                                <td><code>/var/log/elasticsearch/latest.log</code></td>
+                                <td><code>opnsense:elasticsearch</code></td>
                             </tr>
                         </tbody>
                     </table>
