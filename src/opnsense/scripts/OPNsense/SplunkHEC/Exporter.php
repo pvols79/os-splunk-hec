@@ -107,17 +107,21 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
 // Daemon Loop
 // ---------------------------------------------------------------------------
 
+echo "INFO  Exporter daemon started.\n";
 hec_log('INFO  Exporter daemon started.');
 
 while (true) {
+    echo "DEBUG: Reading INI file...\n";
     $ini = @parse_ini_file(CONF_PATH, true);
     if (!$ini) {
+        echo "DEBUG: Failed to read INI. Sleeping 10s...\n";
         sleep(10);
         continue;
     }
 
     $cfg = $ini['splunk_hec'] ?? [];
     if (($cfg['enabled'] ?? '0') !== '1') {
+        echo "INFO  Service disabled — exiting.\n";
         hec_log('INFO  Service disabled — exiting.');
         exit(0);
     }
@@ -126,6 +130,7 @@ while (true) {
     $endpoint = $cfg['endpoint'] ?? '';
 
     if ($token === '' || $endpoint === '') {
+        echo "DEBUG: Token or Endpoint missing. Sleeping 10s...\n";
         sleep(10);
         continue;
     }
@@ -145,21 +150,28 @@ while (true) {
     }
 
     if (empty($sources)) {
+        echo "DEBUG: No log sources enabled. Sleeping 10s...\n";
         sleep(10);
         continue;
     }
 
+    echo "DEBUG: Flushing cache if any...\n";
     flush_cache($endpoint, $token, $maxSizeMB, $maxAgeHrs);
 
+    echo "DEBUG: Loading state...\n";
     $state = load_state();
 
     foreach ($sources as $logFile => $sourcetype) {
-        if (!is_readable($logFile)) continue;
+        if (!is_readable($logFile)) {
+            echo "DEBUG: Log file not readable: {$logFile}\n";
+            continue;
+        }
 
         $currentInode = fileinode($logFile);
         $prev         = $state[$logFile] ?? null;
 
         if ($prev !== null && (int)$prev['inode'] !== $currentInode) {
+            echo "INFO  Log rotated: {$logFile}\n";
             hec_log('INFO  Log rotated: ' . $logFile);
             $prev = null;
         }
@@ -168,11 +180,13 @@ while (true) {
         $fileSize = filesize($logFile);
 
         if ($offset > $fileSize) {
+            echo "INFO  File truncated: {$logFile}\n";
             hec_log('INFO  File truncated: ' . $logFile);
             $offset = 0;
         }
 
         if ($offset < $fileSize) {
+            echo "DEBUG: Reading new lines from {$logFile}...\n";
             $fh = fopen($logFile, 'rb');
             if ($fh !== false) {
                 fseek($fh, $offset);
@@ -227,15 +241,17 @@ while (true) {
 
                 if ($lineCount > 0) {
                     $msg = "INFO  {$logFile}: forwarded {$lineCount} line(s).";
+                    echo $msg . "\n";
                     hec_log($msg);
-                    if (posix_isatty(STDOUT)) echo $msg . "\n";
                 }
             }
+        } else {
+            echo "DEBUG: No new lines in {$logFile}.\n";
         }
     }
 
     save_state($state);
     
-    // Poll every 10 seconds for new log lines
+    echo "DEBUG: Sleeping for 10 seconds...\n";
     sleep(10);
 }
