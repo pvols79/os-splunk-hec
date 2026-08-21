@@ -83,6 +83,17 @@
                             </tr>
                             <tr>
                                 <td>
+                                    <label for="general.verify_ssl">{{ lang._('Verify SSL Certificates') }}</label>
+                                </td>
+                                <td>
+                                    <input type="checkbox" id="general.verify_ssl" name="general.verify_ssl" checked="checked">
+                                    <small class="text-muted">
+                                        {{ lang._('Disable only if using self-signed Splunk certificates with hostname mismatches (e.g. SplunkServerDefaultCert).') }}
+                                    </small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <label for="general.endpoint">{{ lang._('HEC Endpoint URL') }}</label>
                                 </td>
                                 <td>

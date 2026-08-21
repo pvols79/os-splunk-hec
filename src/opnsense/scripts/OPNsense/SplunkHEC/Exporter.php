@@ -38,7 +38,7 @@ function save_state(array $state): void
     @file_put_contents(STATE_PATH, $json, LOCK_EX);
 }
 
-function hec_post(string $endpoint, string $token, string $payload): int
+function hec_post(string $endpoint, string $token, string $payload, bool $verifySsl): int
 {
     $ch = curl_init($endpoint);
     curl_setopt_array($ch, [
@@ -50,8 +50,8 @@ function hec_post(string $endpoint, string $token, string $payload): int
         ],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_SSL_VERIFYPEER => $verifySsl,
+        CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
     ]);
     $response = curl_exec($ch);
     $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -74,7 +74,7 @@ function cache_payload(string $payload): void
     @file_put_contents(CACHE_PATH, $payload . "\n", FILE_APPEND | LOCK_EX);
 }
 
-function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAgeHours): int
+function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAgeHours, bool $verifySsl): int
 {
     if (!is_file(CACHE_PATH) || filesize(CACHE_PATH) === 0) return 0;
 
@@ -96,7 +96,7 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
     $ok     = 0;
 
     foreach ($lines as $line) {
-        $code = hec_post($endpoint, $token, $line);
+        $code = hec_post($endpoint, $token, $line, $verifySsl);
         if ($code === 200) $ok++;
         else $failed[] = $line;
     }
@@ -134,8 +134,9 @@ while (true) {
         exit(0);
     }
 
-    $token    = $cfg['token']    ?? '';
-    $endpoint = $cfg['endpoint'] ?? '';
+    $token     = $cfg['token']    ?? '';
+    $endpoint  = $cfg['endpoint'] ?? '';
+    $verifySsl = (($cfg['verify_ssl'] ?? '1') === '1');
 
     if ($token === '' || $endpoint === '') {
         echo "DEBUG: Token or Endpoint missing. Sleeping 10s...\n";
@@ -164,7 +165,7 @@ while (true) {
     }
 
     echo "DEBUG: Flushing cache if any...\n";
-    flush_cache($endpoint, $token, $maxSizeMB, $maxAgeHrs);
+    flush_cache($endpoint, $token, $maxSizeMB, $maxAgeHrs, $verifySsl);
 
     echo "DEBUG: Loading state...\n";
     $state = load_state();
@@ -218,7 +219,7 @@ while (true) {
 
                     // Send every 500 lines to avoid massive memory use or timeouts
                     if ($batchCount >= 500) {
-                        $code = hec_post($endpoint, $token, $payloadBatch);
+                        $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl);
                         if ($code === 200) {
                             $lineCount += $batchCount;
                         } else {
@@ -231,7 +232,7 @@ while (true) {
 
                 // Send remaining batch
                 if ($batchCount > 0) {
-                    $code = hec_post($endpoint, $token, $payloadBatch);
+                    $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl);
                     if ($code === 200) {
                         $lineCount += $batchCount;
                     } else {
