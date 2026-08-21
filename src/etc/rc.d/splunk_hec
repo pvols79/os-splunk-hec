@@ -10,35 +10,15 @@
 
 name="splunk_hec"
 rcvar="splunk_hec_enable"
-command="/usr/local/opnsense/scripts/OPNsense/SplunkHEC/Exporter.php"
-start_cmd="splunk_hec_start"
-stop_cmd="splunk_hec_stop"
-status_cmd="splunk_hec_status"
+pidfile="/var/run/${name}.pid"
+
+# Use FreeBSD's daemon utility to properly detach the process,
+# prevent configd from hanging, and track the PID automatically.
+command="/usr/sbin/daemon"
+command_args="-f -P ${pidfile} /usr/local/bin/php /usr/local/opnsense/scripts/OPNsense/SplunkHEC/Exporter.php"
 
 load_rc_config $name
 
 : ${splunk_hec_enable:="NO"}
-
-splunk_hec_start()
-{
-    echo "Starting Splunk HEC exporter."
-    /usr/local/bin/php ${command} &
-}
-
-splunk_hec_stop()
-{
-    echo "Stopping Splunk HEC exporter."
-    /bin/pkill -f "Exporter.php" || true
-}
-
-splunk_hec_status()
-{
-    if /bin/pgrep -f "Exporter.php" > /dev/null 2>&1; then
-        echo "splunk_hec is running."
-    else
-        echo "splunk_hec is not running."
-        return 1
-    fi
-}
 
 run_rc_command "$1"
