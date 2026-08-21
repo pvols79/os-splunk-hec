@@ -155,6 +155,7 @@ class ServiceController extends ApiMutableModelControllerBase
         $ini .= 'portalauth = ' . (string)$l->portalauth . "\n";
         $ini .= 'crowdsec = ' . (string)$l->crowdsec . "\n";
         $ini .= 'elasticsearch = ' . (string)$l->elasticsearch . "\n";
+        $ini .= 'zenarmor = ' . (string)$l->zenarmor . "\n";
 
         @mkdir('/var/etc', 0755, true);
         file_put_contents('/var/etc/splunk_hec.conf', $ini);
@@ -183,7 +184,8 @@ class ServiceController extends ApiMutableModelControllerBase
             'unbound' => '/var/log/unbound/latest.log',
             'portalauth' => '/var/log/portalauth/latest.log',
             'crowdsec' => '/var/log/crowdsec/latest.log',
-            'elasticsearch' => '/var/log/elasticsearch/latest.log'
+            'elasticsearch' => '/var/log/elasticsearch/latest.log',
+            'zenarmor' => '/usr/local/zenarmor/output/active/temp'
         ];
         
         $result = [];

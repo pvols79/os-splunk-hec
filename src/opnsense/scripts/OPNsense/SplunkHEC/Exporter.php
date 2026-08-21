@@ -250,6 +250,21 @@ while (true) {
     if (($logsCfg['crowdsec'] ?? '0') === '1') $sources['/var/log/crowdsec/latest.log'] = 'opnsense:crowdsec';
     if (($logsCfg['elasticsearch'] ?? '0') === '1') $sources['/var/log/elasticsearch/latest.log'] = 'opnsense:elasticsearch';
 
+    // Zenarmor rapidly rotating IPDR spools
+    if (($logsCfg['zenarmor'] ?? '0') === '1') {
+        $ipdrFiles = glob('/usr/local/zenarmor/output/active/temp/*.ipdr');
+        if (is_array($ipdrFiles)) {
+            foreach ($ipdrFiles as $ipdr) {
+                if (strpos($ipdr, '_alert_') !== false) $sources[$ipdr] = 'opnsense:zenarmor:alert';
+                elseif (strpos($ipdr, '_dns_') !== false) $sources[$ipdr] = 'opnsense:zenarmor:dns';
+                elseif (strpos($ipdr, '_http_') !== false) $sources[$ipdr] = 'opnsense:zenarmor:http';
+                elseif (strpos($ipdr, '_tls_') !== false) $sources[$ipdr] = 'opnsense:zenarmor:tls';
+                elseif (strpos($ipdr, '_conn_') !== false) $sources[$ipdr] = 'opnsense:zenarmor:conn';
+                else $sources[$ipdr] = 'opnsense:zenarmor:traffic';
+            }
+        }
+    }
+
     if (empty($sources)) {
         echo "DEBUG: No log sources enabled. Sleeping 10s...\n";
         sleep(10);
@@ -318,7 +333,7 @@ while (true) {
                 while (($line = fgets($fh)) !== false) {
                     $processedCount++;
                     $line = rtrim($line, "\r\n");
-                    if ($line === '') continue;
+                    if ($line === '' || $line === '{"index":{}}') continue;
 
                     // Support sending structured JSON (like eve.json) directly instead of as escaped strings
                     $eventData = $line;
@@ -390,6 +405,14 @@ while (true) {
             }
         } else {
             echo "DEBUG: No new lines in {$logFile}.\n";
+        }
+    }
+
+    // Garbage collect deleted files (like ephemeral Zenarmor IPDRs) from state
+    foreach (array_keys($state) as $cachedFile) {
+        if ($cachedFile === 'telemetry_time') continue;
+        if (!file_exists($cachedFile)) {
+            unset($state[$cachedFile]);
         }
     }
 

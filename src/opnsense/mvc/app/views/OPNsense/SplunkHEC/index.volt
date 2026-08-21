@@ -293,10 +293,16 @@
                                 <td><code>opnsense:crowdsec</code></td>
                             </tr>
                             <tr>
-                                <td><strong>{{ lang._('Elasticsearch (Zenarmor)') }}</strong></td>
+                                <td><strong>{{ lang._('Elasticsearch (Zenarmor Engine)') }}</strong></td>
                                 <td><input type="checkbox" id="logs.elasticsearch" name="logs.elasticsearch"></td>
                                 <td><code>/var/log/elasticsearch/latest.log</code></td>
                                 <td><code>opnsense:elasticsearch</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Zenarmor (Traffic & Alerts)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.zenarmor" name="logs.zenarmor"></td>
+                                <td><code>/usr/local/zenarmor/.../*.ipdr</code></td>
+                                <td><code>opnsense:zenarmor:*</code></td>
                             </tr>
                         </tbody>
                     </table>

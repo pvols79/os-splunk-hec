@@ -116,6 +116,10 @@
                 <Default>0</Default>
                 <Required>Y</Required>
             </elasticsearch>
+            <zenarmor type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </zenarmor>
         </logs>
     </items>
 </model>
