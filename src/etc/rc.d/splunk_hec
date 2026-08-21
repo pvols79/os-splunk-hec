@@ -12,10 +12,11 @@ name="splunk_hec"
 rcvar="splunk_hec_enable"
 pidfile="/var/run/${name}.pid"
 
-# Use FreeBSD's daemon utility to properly detach the process,
-# prevent configd from hanging, and track the PID automatically.
+# Use FreeBSD's daemon utility to properly detach the process.
+# We set procname so rc.subr correctly maps the PID file to the PHP process.
 command="/usr/sbin/daemon"
-command_args="-f -P ${pidfile} /usr/local/bin/php /usr/local/opnsense/scripts/OPNsense/SplunkHEC/Exporter.php"
+procname="/usr/local/bin/php"
+command_args="-f -p ${pidfile} /usr/local/bin/php /usr/local/opnsense/scripts/OPNsense/SplunkHEC/Exporter.php"
 
 load_rc_config $name
 
