@@ -276,6 +276,8 @@ while (true) {
         }
     }
 
+    $anyActivity = false;
+
     foreach ($sources as $logFile => $sourcetype) {
         if (!is_readable($logFile)) {
             echo "DEBUG: Log file not readable: {$logFile}\n";
@@ -307,9 +309,12 @@ while (true) {
                 fseek($fh, $offset);
                 $lineCount = 0;
                 $batchCount = 0;
+                $processedCount = 0;
                 $payloadBatch = '';
+                $maxLinesPerSlice = 5000;
 
                 while (($line = fgets($fh)) !== false) {
+                    $processedCount++;
                     $line = rtrim($line, "\r\n");
                     if ($line === '') continue;
 
@@ -345,6 +350,11 @@ while (true) {
                         $payloadBatch = '';
                         $batchCount = 0;
                     }
+                    
+                    // Yield to other log files if we've processed a huge chunk
+                    if ($processedCount >= $maxLinesPerSlice) {
+                        break;
+                    }
                 }
 
                 // Send remaining batch
@@ -370,6 +380,7 @@ while (true) {
                 ];
 
                 if ($lineCount > 0) {
+                    $anyActivity = true;
                     $msg = "INFO  {$logFile}: forwarded {$lineCount} line(s).";
                     echo $msg . "\n";
                     hec_log($msg);
@@ -382,6 +393,11 @@ while (true) {
 
     save_state($state);
     
-    echo "DEBUG: Sleeping for 10 seconds...\n";
-    sleep(10);
+    if ($anyActivity) {
+        // If we are actively chewing through backlogs, yield CPU briefly but skip the 10s sleep
+        usleep(100000); // 100ms
+    } else {
+        echo "DEBUG: Sleeping for 10 seconds...\n";
+        sleep(10);
+    }
 }
