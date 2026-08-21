@@ -14,11 +14,15 @@
                 <Mask>/^[a-fA-F0-9\-]*$/</Mask>
                 <ValidationMessage>Please enter a valid HEC token (UUID format).</ValidationMessage>
             </token>
+            <use_gzip type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </use_gzip>
             <verify_ssl type="BooleanField">
-            <default>1</default>
-            <Required>Y</Required>
-        </verify_ssl>
-        <endpoint type="UrlField">
+                <default>1</default>
+                <Required>Y</Required>
+            </verify_ssl>
+            <endpoint type="UrlField">
                 <Required>N</Required>
                 <ValidationMessage>Please enter a valid URL (e.g. https://splunk.example.com:8088/services/collector).</ValidationMessage>
             </endpoint>
@@ -48,6 +52,38 @@
                 <Default>1</Default>
                 <Required>Y</Required>
             </filter>
+            <audit type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </audit>
+            <dhcpd type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </dhcpd>
+            <lighttpd type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </lighttpd>
+            <ntpd type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </ntpd>
+            <openvpn type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </openvpn>
+            <routing type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </routing>
+            <suricata type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </suricata>
+            <unbound type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </unbound>
         </logs>
     </items>
 </model>

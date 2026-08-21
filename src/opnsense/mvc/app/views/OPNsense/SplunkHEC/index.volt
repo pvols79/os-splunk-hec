@@ -94,6 +94,17 @@
                             </tr>
                             <tr>
                                 <td>
+                                    <label for="general.use_gzip">{{ lang._('Enable GZIP Compression') }}</label>
+                                </td>
+                                <td>
+                                    <input type="checkbox" id="general.use_gzip" name="general.use_gzip" checked="checked">
+                                    <small class="text-muted">
+                                        {{ lang._('Compress payload batches before sending. Drastically reduces bandwidth usage.') }}
+                                    </small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <label for="general.endpoint">{{ lang._('HEC Endpoint URL') }}</label>
                                 </td>
                                 <td>
@@ -160,19 +171,63 @@
                         <tbody>
                             <tr>
                                 <td><strong>{{ lang._('System Log') }}</strong></td>
-                                <td>
-                                    <input type="checkbox" id="logs.system" name="logs.system">
-                                </td>
+                                <td><input type="checkbox" id="logs.system" name="logs.system"></td>
                                 <td><code>/var/log/system/latest.log</code></td>
                                 <td><code>opnsense:syslog</code></td>
                             </tr>
                             <tr>
                                 <td><strong>{{ lang._('Firewall Filter Log') }}</strong></td>
-                                <td>
-                                    <input type="checkbox" id="logs.filter" name="logs.filter">
-                                </td>
+                                <td><input type="checkbox" id="logs.filter" name="logs.filter"></td>
                                 <td><code>/var/log/filter/latest.log</code></td>
                                 <td><code>opnsense:filterlog</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Config Audit / GUI') }}</strong></td>
+                                <td><input type="checkbox" id="logs.audit" name="logs.audit"></td>
+                                <td><code>/var/log/audit/latest.log</code></td>
+                                <td><code>opnsense:audit</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('DHCP (IPv4/IPv6)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.dhcpd" name="logs.dhcpd"></td>
+                                <td><code>/var/log/dhcpd/latest.log</code></td>
+                                <td><code>opnsense:dhcpd</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Web GUI (Lighttpd)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.lighttpd" name="logs.lighttpd"></td>
+                                <td><code>/var/log/lighttpd/latest.log</code></td>
+                                <td><code>opnsense:lighttpd</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('NTP Daemon') }}</strong></td>
+                                <td><input type="checkbox" id="logs.ntpd" name="logs.ntpd"></td>
+                                <td><code>/var/log/ntpd/latest.log</code></td>
+                                <td><code>opnsense:ntpd</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('OpenVPN') }}</strong></td>
+                                <td><input type="checkbox" id="logs.openvpn" name="logs.openvpn"></td>
+                                <td><code>/var/log/openvpn/latest.log</code></td>
+                                <td><code>opnsense:openvpn</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Routing') }}</strong></td>
+                                <td><input type="checkbox" id="logs.routing" name="logs.routing"></td>
+                                <td><code>/var/log/routing/latest.log</code></td>
+                                <td><code>opnsense:routing</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Suricata (IDS/IPS)') }}</strong></td>
+                                <td><input type="checkbox" id="logs.suricata" name="logs.suricata"></td>
+                                <td><code>/var/log/suricata/latest.log</code></td>
+                                <td><code>opnsense:suricata</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ lang._('Unbound DNS') }}</strong></td>
+                                <td><input type="checkbox" id="logs.unbound" name="logs.unbound"></td>
+                                <td><code>/var/log/unbound/latest.log</code></td>
+                                <td><code>opnsense:unbound</code></td>
                             </tr>
                         </tbody>
                     </table>

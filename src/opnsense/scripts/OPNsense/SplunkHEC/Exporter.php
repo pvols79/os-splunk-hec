@@ -38,16 +38,23 @@ function save_state(array $state): void
     @file_put_contents(STATE_PATH, $json, LOCK_EX);
 }
 
-function hec_post(string $endpoint, string $token, string $payload, bool $verifySsl): int
+function hec_post(string $endpoint, string $token, string $payload, bool $verifySsl, bool $useGzip): int
 {
+    $headers = [
+        'Authorization: Splunk ' . $token,
+        'Content-Type: application/json',
+    ];
+
+    if ($useGzip) {
+        $payload = gzencode($payload, 6);
+        $headers[] = 'Content-Encoding: gzip';
+    }
+
     $ch = curl_init($endpoint);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $payload,
-        CURLOPT_HTTPHEADER     => [
-            'Authorization: Splunk ' . $token,
-            'Content-Type: application/json',
-        ],
+        CURLOPT_HTTPHEADER     => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
         CURLOPT_SSL_VERIFYPEER => $verifySsl,
@@ -74,7 +81,7 @@ function cache_payload(string $payload): void
     @file_put_contents(CACHE_PATH, $payload . "\n", FILE_APPEND | LOCK_EX);
 }
 
-function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAgeHours, bool $verifySsl): int
+function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAgeHours, bool $verifySsl, bool $useGzip): int
 {
     if (!is_file(CACHE_PATH) || filesize(CACHE_PATH) === 0) return 0;
 
@@ -96,7 +103,7 @@ function flush_cache(string $endpoint, string $token, int $maxSizeMB, int $maxAg
     $ok     = 0;
 
     foreach ($lines as $line) {
-        $code = hec_post($endpoint, $token, $line, $verifySsl);
+        $code = hec_post($endpoint, $token, $line, $verifySsl, $useGzip);
         if ($code === 200) $ok++;
         else $failed[] = $line;
     }
@@ -137,6 +144,7 @@ while (true) {
     $token     = $cfg['token']    ?? '';
     $endpoint  = $cfg['endpoint'] ?? '';
     $verifySsl = (($cfg['verify_ssl'] ?? '1') === '1');
+    $useGzip   = (($cfg['use_gzip'] ?? '1') === '1');
 
     if ($token === '' || $endpoint === '') {
         echo "DEBUG: Token or Endpoint missing. Sleeping 10s...\n";
@@ -151,12 +159,16 @@ while (true) {
     $logsCfg = $ini['logs'] ?? [];
     $sources = [];
     
-    if (($logsCfg['system'] ?? '0') === '1') {
-        $sources['/var/log/system/latest.log'] = 'opnsense:syslog';
-    }
-    if (($logsCfg['filter'] ?? '0') === '1') {
-        $sources['/var/log/filter/latest.log'] = 'opnsense:filterlog';
-    }
+    if (($logsCfg['system'] ?? '0') === '1')   $sources['/var/log/system/latest.log']   = 'opnsense:syslog';
+    if (($logsCfg['filter'] ?? '0') === '1')   $sources['/var/log/filter/latest.log']   = 'opnsense:filterlog';
+    if (($logsCfg['audit'] ?? '0') === '1')    $sources['/var/log/audit/latest.log']    = 'opnsense:audit';
+    if (($logsCfg['dhcpd'] ?? '0') === '1')    $sources['/var/log/dhcpd/latest.log']    = 'opnsense:dhcpd';
+    if (($logsCfg['lighttpd'] ?? '0') === '1') $sources['/var/log/lighttpd/latest.log'] = 'opnsense:lighttpd';
+    if (($logsCfg['ntpd'] ?? '0') === '1')     $sources['/var/log/ntpd/latest.log']     = 'opnsense:ntpd';
+    if (($logsCfg['openvpn'] ?? '0') === '1')  $sources['/var/log/openvpn/latest.log']  = 'opnsense:openvpn';
+    if (($logsCfg['routing'] ?? '0') === '1')  $sources['/var/log/routing/latest.log']  = 'opnsense:routing';
+    if (($logsCfg['suricata'] ?? '0') === '1') $sources['/var/log/suricata/latest.log'] = 'opnsense:suricata';
+    if (($logsCfg['unbound'] ?? '0') === '1')  $sources['/var/log/unbound/latest.log']  = 'opnsense:unbound';
 
     if (empty($sources)) {
         echo "DEBUG: No log sources enabled. Sleeping 10s...\n";
@@ -165,7 +177,7 @@ while (true) {
     }
 
     echo "DEBUG: Flushing cache if any...\n";
-    flush_cache($endpoint, $token, $maxSizeMB, $maxAgeHrs, $verifySsl);
+    flush_cache($endpoint, $token, $maxSizeMB, $maxAgeHrs, $verifySsl, $useGzip);
 
     echo "DEBUG: Loading state...\n";
     $state = load_state();
@@ -219,7 +231,7 @@ while (true) {
 
                     // Send every 500 lines to avoid massive memory use or timeouts
                     if ($batchCount >= 500) {
-                        $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl);
+                        $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl, $useGzip);
                         if ($code === 200) {
                             $lineCount += $batchCount;
                         } else {
@@ -232,7 +244,7 @@ while (true) {
 
                 // Send remaining batch
                 if ($batchCount > 0) {
-                    $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl);
+                    $code = hec_post($endpoint, $token, $payloadBatch, $verifySsl, $useGzip);
                     if ($code === 200) {
                         $lineCount += $batchCount;
                     } else {
