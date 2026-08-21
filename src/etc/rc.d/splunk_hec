@@ -24,4 +24,14 @@ load_rc_config $name
 # and exits gracefully if disabled. This bypasses the need for OPNsense rc.conf.d templates.
 splunk_hec_enable="YES"
 
+splunk_hec_stop()
+{
+    if [ -f "${pidfile}" ]; then
+        kill $(cat "${pidfile}") >/dev/null 2>&1 || true
+        rm -f "${pidfile}"
+    fi
+    pkill -f "Exporter.php" >/dev/null 2>&1 || true
+}
+stop_cmd="splunk_hec_stop"
+
 run_rc_command "$1"
