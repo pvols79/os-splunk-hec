@@ -177,26 +177,43 @@ while (true) {
             if ($fh !== false) {
                 fseek($fh, $offset);
                 $lineCount = 0;
+                $batchCount = 0;
+                $payloadBatch = '';
 
                 while (($line = fgets($fh)) !== false) {
                     $line = rtrim($line, "\r\n");
                     if ($line === '') continue;
 
-                    // Build the HEC JSON payload with the explicit sourcetype
-                    $payload = json_encode([
+                    $payloadBatch .= json_encode([
                         'time'       => time(),
                         'host'       => gethostname(),
                         'source'     => $logFile,
                         'sourcetype' => $sourcetype,
                         'event'      => $line,
-                    ], JSON_UNESCAPED_SLASHES);
+                    ], JSON_UNESCAPED_SLASHES) . "\n";
 
-                    $code = hec_post($endpoint, $token, $payload);
+                    $batchCount++;
 
+                    // Send every 500 lines to avoid massive memory use or timeouts
+                    if ($batchCount >= 500) {
+                        $code = hec_post($endpoint, $token, $payloadBatch);
+                        if ($code === 200) {
+                            $lineCount += $batchCount;
+                        } else {
+                            cache_payload($payloadBatch);
+                        }
+                        $payloadBatch = '';
+                        $batchCount = 0;
+                    }
+                }
+
+                // Send remaining batch
+                if ($batchCount > 0) {
+                    $code = hec_post($endpoint, $token, $payloadBatch);
                     if ($code === 200) {
-                        $lineCount++;
+                        $lineCount += $batchCount;
                     } else {
-                        cache_payload($payload);
+                        cache_payload($payloadBatch);
                     }
                 }
 
@@ -209,7 +226,9 @@ while (true) {
                 ];
 
                 if ($lineCount > 0) {
-                    hec_log('INFO  ' . $logFile . ': forwarded ' . $lineCount . ' line(s).');
+                    $msg = "INFO  {$logFile}: forwarded {$lineCount} line(s).";
+                    hec_log($msg);
+                    if (posix_isatty(STDOUT)) echo $msg . "\n";
                 }
             }
         }
