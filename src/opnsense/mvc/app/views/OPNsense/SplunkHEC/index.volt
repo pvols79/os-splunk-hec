@@ -7,6 +7,7 @@
 <script>
     $(document).ready(function () {
 
+        {# Populate the form from the API on page load #}
         mapDataToFormUI({
             'frm_GeneralSettings': '/api/splunkhec/service/get'
         }).done(function () {
@@ -14,7 +15,14 @@
             $('.selectpicker').selectpicker('refresh');
         });
 
-        $('#saveAct').SimpleActionButton({
+        {#
+         # Wire up the Apply button using the OPNsense-standard pattern:
+         #   onPreAction  → saveFormToEndpoint() POSTs config to /set
+         #   data-endpoint (on the button) → POSTs to /reconfigure
+         # SimpleActionButton reads data-label from the button element
+         # and handles the spinner lifecycle automatically.
+         #}
+        $('#reconfigureAct').SimpleActionButton({
             onPreAction: function () {
                 return saveFormToEndpoint(
                     '/api/splunkhec/service/set',
@@ -34,7 +42,7 @@
             <div class="col-md-12">
                 <form id="frm_GeneralSettings">
 
-                    {# General Settings #}
+                    {# ── General Settings ── #}
                     <table class="table table-striped table-condensed">
                         <thead>
                             <tr>
@@ -108,7 +116,7 @@
                         </tbody>
                     </table>
 
-                    {# Log Sources #}
+                    {# ── Log Sources ── #}
                     <table class="table table-striped table-condensed" style="margin-top:1.5em;">
                         <thead>
                             <tr>
@@ -144,13 +152,10 @@
     </div>
 </div>
 
-<section class="page-content-main">
-    <div class="content-box">
-        <div class="col-md-12" style="padding: 1em;">
-            <button class="btn btn-primary" id="saveAct" type="button">
-                <b>{{ lang._('Apply') }}</b>
-                <i id="saveAct_progress"></i>
-            </button>
-        </div>
-    </div>
-</section>
+{# Apply button — uses OPNsense base_apply_button partial.
+   SimpleActionButton reads data-label for the button text and
+   data-endpoint to know what to call (and when to stop the spinner). #}
+{{ partial('layout_partials/base_apply_button', {
+    'data_endpoint': '/api/splunkhec/service/reconfigure',
+    'data_label': 'Apply'
+}) }}

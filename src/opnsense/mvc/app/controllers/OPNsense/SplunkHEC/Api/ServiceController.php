@@ -25,9 +25,8 @@ class ServiceController extends ApiMutableModelControllerBase
      * GET /api/splunkhec/service/get
      *
      * Return all current settings (general + logs sections).
-     * mapDataToFormUI() uses the keys to populate form fields by dot-notation ID.
-     *
-     * @return array
+     * mapDataToFormUI() uses the top-level keys to populate form fields
+     * by dot-notation ID (e.g. general.enabled, logs.system).
      */
     public function getAction()
     {
@@ -44,11 +43,12 @@ class ServiceController extends ApiMutableModelControllerBase
     /**
      * POST /api/splunkhec/service/set
      *
-     * Persist settings submitted from the UI.
-     * Note: setBase() in OPNsense 26.7 is UUID-based (grid rows only),
-     * so we use direct model manipulation for flat settings pages.
+     * Persist settings submitted from the UI. Save only — does NOT restart
+     * the daemon. The separate reconfigureAction() does that, called after
+     * this by SimpleActionButton's data-endpoint lifecycle.
      *
-     * @return array
+     * Note: setBase() in OPNsense 26.7+ is UUID-based (grid rows only).
+     * For flat settings pages we use setNodes() + validate() directly.
      */
     public function setAction()
     {
@@ -58,7 +58,6 @@ class ServiceController extends ApiMutableModelControllerBase
             $mdl  = $this->getModel();
             $post = $this->request->getPost();
 
-            // setNodes() traverses the posted array and sets matching model fields
             $mdl->setNodes($post);
 
             $valMsgs = $mdl->validate();
@@ -67,19 +66,7 @@ class ServiceController extends ApiMutableModelControllerBase
             } else {
                 $mdl->serializeToConfig();
                 Config::getInstance()->save();
-
-                // Write the INI file the daemon reads at startup
                 $this->writeIniConfig($mdl);
-
-                // Reload the daemon so new settings take effect immediately
-                try {
-                    $backend = new Backend();
-                    $backend->configdRun('splunk_hec restart');
-                } catch (\Exception $e) {
-                    // Log but don't fail the save — daemon may not be running yet
-                    syslog(LOG_WARNING, 'SplunkHEC: could not restart daemon: ' . $e->getMessage());
-                }
-
                 $result['result'] = 'saved';
             }
         }
@@ -88,9 +75,31 @@ class ServiceController extends ApiMutableModelControllerBase
     }
 
     /**
-     * GET /api/splunkhec/service/status
+     * POST /api/splunkhec/service/reconfigure
      *
-     * @return array
+     * Apply the saved configuration by restarting the daemon.
+     * Called by SimpleActionButton after setAction() succeeds.
+     * This is the endpoint that controls the spinner lifecycle.
+     */
+    public function reconfigureAction()
+    {
+        $result = ['result' => 'failed'];
+
+        if ($this->request->isPost()) {
+            try {
+                $backend = new Backend();
+                $backend->configdRun('splunk_hec restart');
+                $result['result'] = 'ok';
+            } catch (\Exception $e) {
+                syslog(LOG_WARNING, 'SplunkHEC: reconfigure failed: ' . $e->getMessage());
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * GET /api/splunkhec/service/status
      */
     public function statusAction()
     {
@@ -101,9 +110,7 @@ class ServiceController extends ApiMutableModelControllerBase
 
     /**
      * Serialize current model values into the INI file consumed by Exporter.php.
-     * Written to /var/etc/splunk_hec.conf on every save.
-     *
-     * @param \OPNsense\SplunkHEC\SplunkHEC $mdl
+     * Written to /var/etc/splunk_hec.conf on every successful save.
      */
     private function writeIniConfig($mdl)
     {
