@@ -52,11 +52,18 @@ function hec_post(string $endpoint, string $token, string $payload): int
         CURLOPT_TIMEOUT        => 10,
         CURLOPT_SSL_VERIFYPEER => false, // Set true in prod if using valid certs
     ]);
-    curl_exec($ch);
+    $response = curl_exec($ch);
     $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
     if ($code === 0) {
-        hec_log('ERROR cURL failure: ' . curl_error($ch));
+        $err = curl_error($ch);
+        echo "ERROR cURL failure: {$err}\n";
+        hec_log("ERROR cURL failure: {$err}");
+    } elseif ($code !== 200) {
+        echo "ERROR Splunk API returned HTTP {$code}. Response: {$response}\n";
+        hec_log("ERROR Splunk API returned HTTP {$code}. Response: {$response}");
     }
+    
     curl_close($ch);
     return $code;
 }
