@@ -11,8 +11,10 @@ Plugin for sending OPNsense logs to Splunk via HTTP Event Collector (HEC).
 - Compression support (GZIP)
 - Local retry and caching
 - Single service architecture
-- System Hardware & Firewall Telemetry (CPU, Memory, Disk, PF states)
-- Zenarmor Elasticsearch IPDR parsing
+- Zenarmor Elasticsearch IPDR parsing*
+
+> [!NOTE]
+> * **Zenarmor Disclaimer:** The Zenarmor log capture feature is a best-effort, experimental parser that reads locally generated temporary IPDR spool files from your disk. This plugin is not affiliated with, endorsed by, or in any way associated with Zenarmor or Sunny Valley Networks. This feature merely parses text files physically present on your own hardware and does not bypass, modify, or conflict with Zenarmor's software licensing.
 
 ---
 

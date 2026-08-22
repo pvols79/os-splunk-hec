@@ -299,7 +299,13 @@
                                 <td><code>opnsense:elasticsearch</code></td>
                             </tr>
                             <tr>
-                                <td><strong>{{ lang._('Zenarmor (Traffic & Alerts)') }}</strong></td>
+                                <td>
+                                    <strong>{{ lang._('Zenarmor (Traffic & Alerts)') }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <em>Experimental best-effort parser. Not affiliated with Zenarmor or Sunny Valley Networks.</em>
+                                    </small>
+                                </td>
                                 <td><input type="checkbox" id="logs.zenarmor" name="logs.zenarmor"></td>
                                 <td><code>/usr/local/zenarmor/.../*.ipdr</code></td>
                                 <td><code>opnsense:zenarmor:*</code></td>
